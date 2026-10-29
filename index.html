@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>A Chaotic Kitchen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script type="importmap">
+    { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js" } }
+  </script>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <div id="hud" class="hidden">
+    <div id="topbar">
+      <span id="hud-day"></span>
+      <span id="hud-clock"></span>
+      <span id="hud-money"></span>
+      <span id="hud-rep"></span>
+      <span id="hud-room" class="hidden"></span>
+    </div>
+    <div id="orders"></div>
+    <div id="guide" class="hidden"><span class="g-tag">👉 Việc tiếp theo</span><span id="guide-text"></span></div>
+    <div id="crosshair"></div>
+    <div id="prompt"></div>
+    <div id="panel" class="hidden"></div>
+    <div id="held"></div>
+    <div id="toasts"></div>
+    <div id="stir" class="hidden"><div id="stir-dot"></div><span>Xoay chuột để khuấy</span></div>
+    <div id="hint"><kbd>H</kbd> Hướng dẫn · <kbd>Tab</kbd> Sổ công thức · <kbd>Esc</kbd> Tạm dừng</div>
+  </div>
+
+  <div id="recipe" class="hidden">
+    <h3>📖 Bánh lọt xào tôm</h3>
+    <h4>Giai đoạn A — Làm sợi bánh lọt (1 mẻ = 6 phần)</h4>
+    <ol>
+      <li><b>Kệ khô</b>: lấy Bột gạo &amp; Bột năng, <kbd>E</kbd> vào <b>Nồi</b>.</li>
+      <li>Cầm nồi tới <b>Bồn rửa</b>, <kbd>E</kbd> để thêm nước.</li>
+      <li>Đặt nồi lên quầy, <b>giữ chuột trái + xoay chuột</b> để khuấy đều 100%.</li>
+      <li>Đặt nồi lên <b>Bếp</b>, lửa <b>nhỏ</b> (lăn chuột), khuấy liên tục tới khi <b>Độ sánh</b> vào vùng xanh.</li>
+      <li>Tắt bếp, lấy <b>Chai dầu ăn</b> ở Kệ gia vị cho vào nồi, khuấy đều.</li>
+      <li><b>Thau</b>: thêm nước ở Bồn rửa + đá ở <b>Tủ đông</b>, đặt dưới <b>Khuôn ép</b>.</li>
+      <li>Cầm nồi bột <kbd>E</kbd> vào Khuôn ép, <b>giữ chuột trái</b> để giữ áp lực trong vùng xanh.</li>
+      <li>Cầm thau tới <b>Khay để ráo</b>, <kbd>E</kbd> để vớt bánh.</li>
+    </ol>
+    <h4>Giai đoạn B — Xào (mỗi đơn)</h4>
+    <ol>
+      <li><b>Tủ lạnh</b> → Tôm → <b>Thớt</b> (giữ chuột: bóc vỏ, bỏ đầu, rút chỉ) → <b>Bồn rửa</b> (giữ chuột: rửa).</li>
+      <li>Giá đỗ → rửa. Hẹ → rửa → Thớt (click liên tục để cắt khúc).</li>
+      <li>Chảo trên bếp: thêm dầu → tôm → xào tới ~60% (gần chín).</li>
+      <li>Thêm 1 phần bánh lọt, lửa <b>lớn</b>, <b>click liên tục để đảo</b> – không đảo là cháy!</li>
+      <li>Nêm <b>nước mắm</b> + <b>tiêu</b> (trừ khi khách dặn “không tiêu”).</li>
+      <li>Thêm giá &amp; hẹ, đảo nhanh. Bánh 75–90% thì tắt bếp.</li>
+      <li>Lấy đĩa ở <b>Chồng đĩa</b>, <kbd>E</kbd> vào chảo để múc ra, mang ra bàn khách.</li>
+      <li>Dọn đĩa bẩn về Bồn rửa, giữ chuột để rửa, cất lại Chồng đĩa.</li>
+    </ol>
+    <p class="muted">Tab để đóng · Quán vẫn chạy khi đang xem!</p>
+  </div>
+
+  <div id="menu" class="overlay">
+    <div class="card">
+      <div class="logo">🍤🔥🍳</div>
+      <h1>A Chaotic Kitchen</h1>
+      <p class="sub">Quán ăn Việt hỗn loạn · nấu ăn co-op 1–4 người</p>
+      <label class="field">Tên của bạn <input id="opt-name" maxlength="14" placeholder="VD: Long" autocomplete="off" /></label>
+
+      <h4 class="section">🏠 Làm chủ quán</h4>
+      <div id="menu-buttons" class="actions col"></div>
+      <label class="check"><input type="checkbox" id="opt-online" checked /> Mở phòng online cho bạn bè (tối đa 4 người)</label>
+      <label class="setting">Thời gian mở cửa mỗi ngày
+        <select id="opt-service">
+          <option value="180">3 phút</option>
+          <option value="300" selected>5 phút</option>
+          <option value="480">8 phút</option>
+        </select>
+      </label>
+      <label class="setting">Độ nhạy chuột <input type="range" class="opt-sens" min="0.2" max="2.5" step="0.1" /> <b class="sens-val"></b></label>
+      <label class="check"><input type="checkbox" class="opt-guide" checked /> Hiện hướng dẫn từng bước (phím H)</label>
+
+      <h4 class="section">🤝 Vào quán của bạn bè</h4>
+      <div class="join">
+        <input id="opt-code" maxlength="4" placeholder="MÃ PHÒNG" autocomplete="off" />
+        <button id="btn-join">Vào phòng</button>
+      </div>
+      <div id="menu-error" class="menu-error"></div>
+      <div class="controls">
+        <div><kbd>W A S D</kbd> Di chuyển · <kbd>Shift</kbd> Chạy</div>
+        <div><kbd>Chuột</kbd> Nhìn xung quanh</div>
+        <div><kbd>E</kbd> Cầm / đặt / cho vào / lấy</div>
+        <div><kbd>Chuột trái</kbd> Thao tác: khuấy, đảo, bóc, cắt, rửa, ép</div>
+        <div><kbd>Lăn chuột</kbd> hoặc <kbd>Z</kbd><kbd>X</kbd> Chỉnh lửa · chọn đồ trong tủ</div>
+        <div><kbd>Tab</kbd> Sổ công thức · <kbd>Esc</kbd> Tạm dừng</div>
+      </div>
+      <p class="note">Chủ quán giữ bản lưu: tiền, kho, ngày chơi. Bạn bè vào giúp bếp.</p>
+    </div>
+  </div>
+
+  <div id="pause" class="overlay hidden">
+    <div class="card">
+      <h2 id="pause-title">Tạm dừng</h2>
+      <div id="room-info"></div>
+      <div class="actions col">
+        <button id="btn-resume">Tiếp tục</button>
+        <button id="btn-menu" class="secondary">Về menu (bỏ ngày đang chơi)</button>
+      </div>
+      <label class="setting">Độ nhạy chuột <input type="range" class="opt-sens" min="0.2" max="2.5" step="0.1" /> <b class="sens-val"></b></label>
+      <label class="check"><input type="checkbox" class="opt-guide" checked /> Hiện hướng dẫn từng bước (phím H)</label>
+      <div class="controls">
+        <div><kbd>W A S D</kbd> Di chuyển · <kbd>Shift</kbd> Chạy</div>
+        <div><kbd>E</kbd> Cầm / đặt / cho vào / lấy</div>
+        <div><kbd>Chuột trái</kbd> Thao tác · <kbd>Lăn chuột</kbd>/<kbd>Z</kbd><kbd>X</kbd> Lửa, chọn đồ</div>
+        <div><kbd>Tab</kbd> Sổ công thức</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="shop" class="overlay hidden"><div class="card wide" id="shop-card"></div></div>
+  <div id="summary" class="overlay hidden"><div class="card wide" id="summary-card"></div></div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

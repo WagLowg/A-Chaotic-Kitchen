@@ -1,0 +1,12 @@
+{
+  "name": "a-chaotic-kitchen",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Co-op cooking game - Vietnamese restaurant, first person (prototype)",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
